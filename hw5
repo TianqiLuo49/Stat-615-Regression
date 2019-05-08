@@ -1,0 +1,439 @@
+**Stat 615 HW**
+
+**Tianqi Luo**
+
+##6.9(a)
+
+**Read the data and change the column names**
+```{r}
+data1 = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw5/data1.txt")
+
+cols = c("Hours", "CasesShipped", "IndirectCosts", "Holidays")
+
+colnames(data1) = cols
+
+```
+
+**Draw the histograms for X1s and X2s**
+```{r}
+par(mfrow = c(1,2))
+hist(data1$CasesShipped, xlab = "Cases", main = "X1")
+hist(data1$IndirectCosts, xlab = "Indirect Costs", main = "X2")
+```
+
+**We can see from the histograms that there are no outliers or gaps in the data**
+
+
+##6.9(b)
+
+**Plot the time plot for each predictor**
+```{r}
+par(mfrow = c(1,3))
+time = c(1:52)
+plot(time, data1$CasesShipped, type = "l", ylab = "Cases")
+plot(time, data1$IndirectCosts, type = "l", ylab = "Indirect Costs")
+plot(time, data1$Holidays, type = "l", ylab = "Holidays")
+```
+
+**The plots show that there are strong correlations between time and Cases, and time and Holidays, but not time and Indirect Costs**
+
+
+## 6.9(c)
+
+**Scatter plot matrix**
+```{r}
+pairs(data1)
+```
+
+
+
+**Correlation matrix**
+
+```{r}
+library(corrplot)
+corrplot(cor(data1), method = "number")
+```
+**There are stronger correlations between Cases and Holidays and Hours compared to Indirect Costs and Hours**
+
+
+##6.10(a)
+
+**Find the regression line for this question**
+```{r}
+fit = lm(Hours ~ CasesShipped + IndirectCosts + Holidays, data1)
+summary(fit)
+```
+**Regression line is Hours = 4150 + 0.00007871 * CasesShipped - 13.17 * IndirectCosts + 623.6 * Holidays**
+
+
+**b1, b2, b3 are the coefficients that the rate of Y changes with one unit of x1, x2, x3 changes**
+
+
+##6.10(b)
+```{r}
+resid = resid(fit)
+boxplot(resid)
+```
+**We can see from the boxplot, there are no outliers for the residuals, which corresponds with our findings from the last question**
+
+
+##6.10(c)
+
+```{r}
+par(mfrow = c(2,3))
+plot(fit$fitted.values, resid, xlab = "Y_hat", ylab = "residuals", type = "l")
+plot(data1$CasesShipped, resid, xlab = "X1", ylab = "residuals", type = "l")
+plot(data1$IndirectCosts, resid, xlab = "X2", ylab = "residuals", type = "l")
+plot(data1$Holidays, resid, xlab = "X3", ylab = "residuals", type = "l")
+
+plot(data1$CasesShipped * data1$IndirectCosts, resid, xlab = "X1*X2", ylab = "residuals", type = "l")
+```
+
+**QQ plots**
+```{r}
+par(mfrow = c(2,2))
+qqnorm(fit$fitted.values)
+qqnorm(data1$CasesShipped)
+qqnorm(data1$IndirectCosts)
+```
+
+**We can from the plots that, the residuals are not correlated with time since the distribution is random, and all the variables are normally distributed**
+
+##6.10(d)
+```{r}
+plot(time, resid, xlab = "Time", ylab = "Residuals", type = "l")
+```
+**From the time plot, we can see the error terms follow a certain pattern, so we can see that they are correlated**
+
+#6.11(a)
+```{r}
+summary(fit)
+```
+**We can see that the p-values for b1 and b3 are smaller than 0.05, so we reject null hypothese are conclude that they're significant. However, b2 is bigger than 0.05, so we do not reject the null hypothesis and conclude b2 is insignificant**
+
+
+#6.11(b)
+
+**Interval for b1**
+```{r}
+b = qt(1- 0.05/(2*2), 48)
+
+b1_upper_level = 7.871e-04  + b * 3.646e-04
+
+
+b1_lower_level = 7.871e-04 - b * 3.646e-04
+
+b1_upper_level
+
+b1_lower_level
+```
+
+**Using Bonferroni, there's a 95% chance that b1 falls within (-0.000005654762, 0.001630748)**
+
+
+**Interval for b3**
+```{r}
+b3_upper_level = 6.236e+02 + b * 6.264e+01
+
+b3_lower_level = 6.236e+02 - b * 6.264e+01
+
+b3_upper_level
+
+b3_lower_level
+```
+
+**Using Bonferroni, there's a 95% chance that b3 falls within (478.6574, 768.5426)**
+
+
+
+
+##6.11(c)
+**We can read from the summary table, that R^2 = 68.83%, so the model explains 68.83% of the response data around its mean**
+
+
+
+
+## 6.12(a)
+```{r}
+bonferroni_pred_1 = predict(fit, newdata = data.frame(CasesShipped = 302000, IndirectCosts = 7.20, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(5))
+
+b = qt(1 - (0.05/(2*5)), 48)
+
+w = sqrt(4* qf(0.95, 4, 48))
+
+b
+
+w
+```
+
+**We can see that our Bonferroni critical value is 2.682204, and our Working-Hotelling critical value is 3.203274**
+
+
+**Find confidence interval for the first column**
+```{r}
+bonferroni_pred_1_upper_interval = bonferroni_pred_1$fit[1] + b * bonferroni_pred_1$se.fit
+
+bonferroni_pred_1_lower_interval = bonferroni_pred_1$fit[1] - b * bonferroni_pred_1$se.fit
+
+bonferroni_pred_1_upper_interval
+bonferroni_pred_1_lower_interval
+```
+**We can see our interval is (4235.507, 4350.073)**
+
+
+**Find the interval for the second column**
+```{r}
+bonferroni_pred_2 = predict(fit, newdata = data.frame(CasesShipped = 245000, IndirectCosts = 7.40, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(5))
+
+bonferroni_pred_2_upper_interval = bonferroni_pred_2$fit[1] + b * bonferroni_pred_2$se.fit
+
+bonferroni_pred_2_lower_interval = bonferroni_pred_2$fit[1] - b * bonferroni_pred_2$se.fit
+
+bonferroni_pred_2_upper_interval
+bonferroni_pred_2_lower_interval
+```
+
+**We can see our interval is (4165.626, 4324.96)**
+
+
+**Find the interval for the third column**
+```{r}
+bonferroni_pred_3 = predict(fit, newdata = data.frame(CasesShipped = 280000, IndirectCosts = 6.90, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(5))
+
+bonferroni_pred_3_upper_interval = bonferroni_pred_3$fit[1] + b * bonferroni_pred_3$se.fit
+
+bonferroni_pred_3_lower_interval = bonferroni_pred_3$fit[1] - b * bonferroni_pred_3$se.fit
+
+bonferroni_pred_3_upper_interval
+bonferroni_pred_3_lower_interval
+```
+**Our interval is (4213.859, 4344.989)**
+
+
+
+**Find the interval for the fourth column**
+```{r}
+bonferroni_pred_4 = predict(fit, newdata = data.frame(CasesShipped = 350000, IndirectCosts = 7.00, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(5))
+
+bonferroni_pred_4_upper_interval = bonferroni_pred_4$fit[1] + b * bonferroni_pred_4$se.fit
+
+bonferroni_pred_4_lower_interval = bonferroni_pred_3$fit[1] - b * bonferroni_pred_4$se.fit
+
+bonferroni_pred_4_upper_interval
+bonferroni_pred_4_lower_interval
+```
+**Our interval is (4201.83, 4410.798)**
+
+
+**Find the interval for the fifth column**
+```{r}
+bonferroni_pred_5 = predict(fit, newdata = data.frame(CasesShipped = 295000, IndirectCosts = 6.70, Holidays = 1), se.fit = T, interval = "confidence", level = 1 - 0.05/(2*5))
+
+bonferroni_pred_5_upper_interval = bonferroni_pred_5$fit[1] + b * bonferroni_pred_5$se.fit
+
+bonferroni_pred_5_lower_interval = bonferroni_pred_5$fit[1] - b * bonferroni_pred_5$se.fit
+
+bonferroni_pred_5_upper_interval
+bonferroni_pred_5_lower_interval
+```
+**Our interval is (4749.781, 5085.055)**
+
+
+##6.12(b)
+
+**Plot the points of X1 along with X2, and plot our points in the question**
+```{r}
+plot(data1$CasesShipped, data1$IndirectCosts, xlab = "X1", ylab = "X2", ylim = c(1, 10))
+
+points(400000, 7.2,  col = "blue", pch = 16)
+
+points(400000, 9.9, col = "red", pch = 19)
+```
+
+**From the graph, we can see our point at (400000, 7.2) falls within the scope of our model, but our point (400000, 9.9) doesn't, so we retain the first point and reject the second point**
+
+
+##6.13
+
+**Same as question above, we make Bonferroni predictions with these four columns**
+
+**Find coefficients for Bonferroni and Scheffe**
+```{r}
+bonferroni_pred_6 = predict(fit, newdata = data.frame(CasesShipped = 230000, IndirectCosts = 7.50, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(2*4))
+
+B = qt(1 - (0.05/(2*4)), 48)
+
+S = sqrt(4 * qf(0.95, 4, 48))
+
+B 
+
+S
+
+```
+
+**Bonferroni coefficient is 2.595323, Scheffe's is 3.203274**
+
+
+```{r}
+bonferroni_pred_6_upper_interval = bonferroni_pred_6$fit[1] + B * bonferroni_pred_6$se.fit
+
+bonferroni_pred_6_lower_interval = bonferroni_pred_6$fit[1] - B * bonferroni_pred_6$se.fit
+
+bonferroni_pred_6_upper_interval
+bonferroni_pred_6_lower_interval
+```
+
+**Our interval for the first column is (4143.707, 4320.634)**
+
+```{r}
+bonferroni_pred_7 = predict(fit, newdata = data.frame(CasesShipped = 250000, IndirectCosts = 7.30, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(2*4))
+
+B = qt(1 - (0.05/(2*4)), 48)
+
+bonferroni_pred_7_upper_interval = bonferroni_pred_6$fit[1] + B * bonferroni_pred_7$se.fit
+
+bonferroni_pred_7_lower_interval = bonferroni_pred_6$fit[1] - B * bonferroni_pred_7$se.fit
+
+bonferroni_pred_7_upper_interval
+bonferroni_pred_7_lower_interval
+```
+
+**Our interval for the second column is (4158.717, 4305.624)**
+
+
+```{r}
+bonferroni_pred_8 = predict(fit, newdata = data.frame(CasesShipped = 280000, IndirectCosts = 7.10, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(2*4))
+
+B = qt(1 - (0.05/(2*4)), 48)
+
+bonferroni_pred_8_upper_interval = bonferroni_pred_8$fit[1] + B * bonferroni_pred_8$se.fit
+
+bonferroni_pred_8_lower_interval = bonferroni_pred_8$fit[1] - B * bonferroni_pred_8$se.fit
+
+bonferroni_pred_8_upper_interval
+bonferroni_pred_8_lower_interval
+```
+
+**Our interval for the third column is (4216.931, 4336.651)**
+
+
+```{r}
+bonferroni_pred_9 = predict(fit, newdata = data.frame(CasesShipped = 340000, IndirectCosts = 6.90, Holidays = 0), se.fit = T, interval = "confidence", level = 1 - 0.05/(2*4))
+
+B = qt(1 - (0.05/(2*4)), 48)
+
+bonferroni_pred_9_upper_interval = bonferroni_pred_9$fit[1] + B * bonferroni_pred_9$se.fit
+
+bonferroni_pred_9_lower_interval = bonferroni_pred_9$fit[1] - B * bonferroni_pred_9$se.fit
+
+bonferroni_pred_9_upper_interval
+bonferroni_pred_9_lower_interval
+```
+
+**Our interval for the fourth column is (4254.925, 4398.373)**
+
+
+##7.5
+
+**Read in the data first, rename the columns**
+```{r}
+data2 = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw5/data2.txt")
+
+
+cols = c("Y", "X1", "X2", "X3")
+
+colnames(data2) = cols
+```
+
+
+## 7.5(a)
+
+**Find the SSR for the model with just X2** 
+
+```{r}
+fit3 = lm(Y ~ X2, data2)
+
+anova(fit3)
+```
+
+**SSR(X2) = 4860.3**
+
+**Find the SSR for the model with X1 and X2**
+```{r}
+fit4 = lm(Y ~ X1 + X2, data2)
+
+anova(fit4)
+```
+
+**The Sum of Squares for X1, X2 is 8275.4 + 480.9 = 8756.3**
+
+**SSR(X1|X2) = SSR(X1, X2) - SSR(X2) = 8756.3 - 4860.3 = 3896**
+
+**Find the SSR for the model with X1, X2 and X3**
+```{r}
+fit2 = lm(Y ~ X1 + X2 + X3, data2)
+summary(fit2)
+
+anova(fit2)
+```
+**SSR(X1, X2, X3) = 8275.4 + 480.9 + 364.2 = 9120.5**
+
+**SSR(X3 | X1, X2) = SSR(X1, X2, X3) - SSR(X1, X2) = 9120.5 - 8756.3 = 364.2**
+
+
+
+## 7.5(b)
+
+**H0: B3 = 0, HA: B3 is significant**
+```{r}
+anova(fit4, fit2)
+qf(0.975, 1, 42)
+```
+**We can see that F score is smaller than 5.403859, so we do not reject the null hypothesis at alpha = 0.025, so B3 is insignificant. So we can drop X3 from the model if we retained X1 and X2**
+
+## 7.6
+
+**H0: B2 = B3 = 0, HA: At least one of them is significant**
+```{r}
+fit5 = lm(Y ~ X1, data2)
+anova(fit5, fit2)
+qf(0.975, 2, 42)
+```
+**We can see that F statistic > F score, so we reject H0 at alpha = 0.025, and conclude that the two models are significantly different. So, we cannot drop both X2 and X3 given that X1 is retained**
+
+##7.9
+
+**H0 : B1 = -1, B2 = 0. HA: B1 ! = -1 or B2 ! = 0**
+
+**To build a new model, we plug in B1 = -1, B2 = 0 into the model, and we get Y = B0 - X1 + 0 + B3X3, so we get Y + X1 = B0 + B3x3, so we have a new Y**
+
+```{r}
+Y_new = data2$Y + data2$X1
+
+
+data3 = data.frame("Y" = Y_new, "X3" = data2$X3)
+
+
+Y_fit = lm(Y ~ X3, data3)
+
+anova(Y_fit)
+```
+
+**Our p_value for the new model is 0.0002162 < 0.025, so the two models are significantly different, so we reject H0 and conclude that at least B1 ! = -1 or B2 ! = 0**
+
+
+
+```{r}
+fit7 = lm(Y ~ X1, data2)
+
+fit8 = lm(Y ~ X1 + X2, data2)
+
+fit9 = lm(Y ~ X1 + X2 + X3, data2)
+```
+
+
+```{r}
+anova(fit7)
+anova(fit8)
+anova(fit9)
+```
