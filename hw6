@@ -1,0 +1,217 @@
+**Stat 615 HW6**
+
+**Tianqi Luo**
+
+## Problem 1
+
+**Read in the data, change the names of the variables**
+```{r}
+muscle_mass = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw6/muscle_mass.txt")
+
+
+cols = c("Y", "X")
+
+colnames(muscle_mass) = cols
+```
+
+
+## 8.4(a)
+
+**Fit the model and draw the line with the scatterplot**
+```{r}
+fit = lm(Y ~ X + I(X^2), muscle_mass)
+
+plot(muscle_mass$X, muscle_mass$Y, xlab = "X", ylab = "Y")
+
+newx = seq(40, 100, by = 0.25)
+
+lines(newx, predict(fit, data.frame(X = newx)))
+```
+
+**We can see from the plot that there appears to be a good fit here**
+
+
+**Find the R^2 using summary**
+```{r}
+summary(fit)
+```
+
+**Our linear model is Y = 207.349608 - 2.964323 * X + 0.014840 * X^2 **
+
+
+**We can see R^2 = 0.7632, so our linear model explains 76.32% of the response variable**
+
+
+## 8.4(b)
+```{r}
+summary(fit)
+
+qf(0.95, 2, 57)
+```
+
+**H0: There is no linear regression. HA: There is linear regression**
+
+**Since our F-statistic is greater than F-score, so we reject H0 and conclude there is a linear relation**
+
+
+## 8.4(c)
+```{r}
+conf = predict(fit, newdata = data.frame(X = 48), interval = "confidence")
+
+conf
+```
+
+**We're 95% confident that the mean muscle mass of a  woman aged 38 falls within (96.28436, 102.2249)**
+
+
+## 8.4(d)
+```{r}
+pred = predict(fit, newdata = data.frame(X = 48), interval = "prediction")
+
+pred
+```
+
+**There is a 95% probability that the muslce mass for a woman who is 48 years old falls within (82.9116, 115.5976)**
+
+
+
+## 8.4(e) 
+```{r}
+summary(fit)
+```
+
+**p-value is greater than 0.05, H0: B2 = 0, HA: B2 ! = 0, so we do not reject H0 and we should drop the quadratic term**
+
+
+## Problem 2
+
+**Read in the data and change the names of the variables**
+
+```{r}
+grocery_retailer = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw6/grocery_retailer.txt")
+
+cols = c("Y", "X1", "X2", "X3")
+
+colnames(grocery_retailer) = cols
+
+```
+
+## 8.25(a)
+
+**Fit the model(8.58)**
+
+```{r}
+fit_1 = lm(Y ~ X1 + I(X1^2) + X3 + (X1 * X3) + I(X1^2 * X3), grocery_retailer)
+
+summary(fit_1)
+```
+
+**Our linear model is Y = 3878 + 0.001858 * X1 - 0.000000001577 * X1^2 + 837 * X3 + 0.000000001808 * (X1^2)X3 - 0.001283 * X1X3 **
+
+
+## 8.25(b)
+
+**Fit a null model with the quadratic term dropped**
+```{r}
+fit_0_null = lm(Y ~ X1 + X3 + (X1 * X3), grocery_retailer)
+
+anova(fit_0_null, fit_1)
+```
+
+**H0: The quadratic terms can be dropped. HA: They can't be dropped**
+
+**Since the p-value is greater than 0.05, we do not reject H0 and conclude the quadratic terms can be dropped**
+
+**Fit a null model with the interaction term dropped**
+```{r}
+fit_1_null = lm(Y ~ X1 + X3, grocery_retailer)
+anova(fit_1_null, fit_1)
+```
+
+**H0: The interaction term can be dropped.  HA: The interaction term cannot be dropped **
+
+**Since p-value is greater than 0.05, the interaction term can be dropped**
+
+
+## 8.25(c)
+
+**Because cases is the only variable that is not a dummy variable, and we cannot have a linear model with just a dummy variable**
+
+
+## Problem 3
+
+## 8.39(a)
+
+**Read in the data, create regional categorical variables X3, X4, X5, with each representing NE, NC and S, create a new dataframe, rename the variables**
+```{r}
+CDI = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw6/CDI.txt")
+
+X3 = as.numeric(CDI$V17 == 1)
+
+X4 = as.numeric(CDI$V17 == 2)
+
+X5 = as.numeric(CDI$V17 == 3)
+
+newdata = data.frame(CDI$V8, CDI$V5, CDI$V16, X3, X4, X5)
+
+cols = c("Y", "X1", "X2", "X3", "X4", "X5")
+
+colnames(newdata) = cols
+
+```
+
+**Fit the linear model with X1, X2, X3, X4, and X5**
+```{r}
+fit_2 = lm(Y ~ X1 + X2 + as.factor(X3) + as.factor(X4) + as.factor(X5), newdata)
+
+summary(fit_2)
+```
+
+**Our linear model is Y = -207.5 + 0.0005515 * X1 + 0.107 * X2 + 149 * X3 + 145.5 * X4 + 191.2 * X5**
+
+
+##8.39(b)
+
+**Create a categorical for W, build a new dataframe, rename the variables, and build a new dataframe**
+```{r}
+X6 = as.numeric(CDI$V17 == 4)
+
+
+brandnewdata = data.frame(CDI$V8, CDI$V5, CDI$V16, X3, X4, X5, X6)
+
+cols = c("Y", "X1", "X2", "X3", "X4", "X5", "X6")
+
+colnames(brandnewdata) = cols
+```
+
+**Use NE as the baseline for dummy variables, with a new model with X1, X2, X4, X5, and X6**
+```{r}
+new_fit = lm(Y ~ X1 + X2 + as.factor(X4) + as.factor(X5) + as.factor(X6), brandnewdata)
+
+summary(new_fit)
+```
+
+**Our new linear model is Y = -58.58 + 0.0005515*X1 + 0.107*X2 - 3.493*X4 + 42.2*X5 - 149*X6**
+
+**Find the confidence interval**
+```{r}
+confint(new_fit, level = 0.90)
+```
+**The confidence interval X4 indicates the difference because B3 and B4**
+
+**We can see that 0 is well within the 95% confidence interval of X4: (-133.4021, 126.4158169), so yes there is no significant difference** 
+
+
+
+
+##8.39(c)
+
+**Fit a null model without the geographic variables**
+```{r}
+fit_5 = lm(Y ~ X1 + X2, newdata)
+anova(fit_5, fit_2)
+```
+
+**H0: B3 = B4 = B5 = 0, HA: At least one of them is not equal to 0**
+
+**Since the p-value is greater than 0.10, so we do not the reject H0, so we conclude that B3 = B4 = B5 = 0**
