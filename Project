@@ -1,0 +1,67 @@
+```{r}
+avocado =  read.csv("/Users/naughtyboy35/Desktop/Stat 615/project_1/avocado_project.csv")
+```
+
+```{r}
+avocado3 = lm(avg_price ~ total_volume + total_bags + type + year + 
+    summer + spring + autumn, data = avocado)
+
+summary(avocado3)
+```
+
+
+```{r}
+library(MASS)
+stepAIC(avocado3, direction = "backward")
+```
+**Our best model is Average Price = -114.4 - 0.00000001612 * total_bags + 0.4917 * type + 0.05724 * year + 0.183 * summer + 0.05526 * spring + 0.2468 * autumn**
+
+```{r}
+resid = resid(avocado3)
+
+qqnorm(resid)
+
+qqline(resid)
+```
+
+```{r}
+library(MASS)
+boxcox(avocado3)
+```
+
+**We can see that on a 95% CI the lambda does not include 1, so a transformation is necessary**
+
+
+**Log transformation**
+```{r}
+avocado$log_avg_price = log(avocado$avg_price)
+
+transformed_fit_log = lm(log_avg_price ~ total_volume + total_bags + type + year + summer + spring + autumn, data = avocado)
+
+summary(transformed_fit_log)
+```
+
+**Square root transformation**
+```{r}
+avocado$sqrt_avg_price = sqrt(avocado$avg_price)
+
+transformed_fit_sqrt = lm(sqrt_avg_price ~ total_volume + total_bags + type + year + summer + spring + autumn, data = avocado)
+
+summary(transformed_fit_sqrt)
+```
+
+
+**Final model**
+```{r}
+avocado$sqrt_total_volume = sqrt(avocado$total_volume)
+
+avocado$sqrt_total_bags = sqrt(avocado$total_volume)
+
+avocado$sqrt_type = sqrt(avocado$type)
+
+avocado$sqrt_year = sqrt(avocado$year)
+
+transformed_fit_final = lm(log_avg_price ~ sqrt_total_volume + sqrt_total_bags + sqrt_type + sqrt_year + summer + spring + autumn, data = avocado)
+
+summary(transformed_fit_final)
+```
