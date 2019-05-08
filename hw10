@@ -1,0 +1,108 @@
+**Stat 615 HW 10**
+
+**Tianqi Luo**
+
+## Problem 1
+
+**14.13(a)**
+
+**Read in the data**
+```{r}
+car_purchase = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw10/car_purchase.txt")
+
+cols = c("Y", "X1", "X2")
+
+colnames(car_purchase) = cols
+```
+
+**Fit a logistic regression model, since it's using the log-likehood function, the estimated Bs would just be the maximum likelihood estimators**
+```{r}
+car_logit = glm(Y ~ X1 + X2, data = car_purchase, family = binomial(link = "logit"))
+```
+
+
+**We can read off the maximum likelihood estimators of b0, b1, and b2 from the summary**
+```{r}
+summary(car_logit)
+```
+**So we can see that b0 = -4.73931, b1 = 0.06773, b2 = 0.59863**
+
+
+**14.13(b)**
+```{r}
+b1 = 0.06772861
+b2 = 0.59845978
+exp(b1)
+exp(b2)
+```
+**One unit of change for the family income will multiply the result of the odds ratio by 1.070075, one unit of change for the current age of the oldest family automobile will multiply the odds ratio by 1.819314**
+
+**14.13(c)**
+```{r}
+pred = predict(car_logit, newdata = data.frame(X1 = 50, X2 = 3), interval = "confidence", disp = 180)
+
+probs = exp(pred)/(1+exp(pred))
+
+probs
+```
+
+**The predicted probability is 60.90%**
+
+## Problem 2
+
+**14.19(a)**
+```{r}
+summary(car_logit)
+
+se_b1 = 0.02806
+se_b2 = 0.39007
+
+```
+
+
+
+**Using Bonferroni coefficient, B = z(1-0.1/4) = z(0.975)**
+
+**Find the interval when income is 20**
+```{r}
+B = qnorm(0.975)
+upper_limit_b1 = exp(20 * b1 + B * 20 * se_b1)
+lower_limit_b1 = exp(20 * b1 - B * 20 * se_b1)
+income_odds_ratio_CI = c(lower_limit_b1, upper_limit_b1)
+income_odds_ratio_CI
+```
+**The odds ratio interval when X1 = 20 is (1.289998, 11.640658)**
+
+**Find the interval when age is 2**
+```{r}
+upper_limit_b2 = exp(2 * b2 + B * 2 * se_b2)
+lower_limit_b2 = exp(2 * b2 - B * 2 * se_b2)
+age_odds_ratio_CI = c(lower_limit_b2, upper_limit_b2)
+age_odds_ratio_CI
+```
+**The odds ratio interval when X2 =2 is (0.7173964, 15.2711566)**
+
+**14.19(b)**
+```{r}
+library(aod)
+wald.test(b = coef(car_logit), Sigma = vcov(car_logit), Terms = 3)
+```
+
+**H0: b2 = 0, HA: b2 != 0**
+
+**We can see the p-value = 0.12, alpha = 0.05, since p_value > alpha, so we do not reject H0 at alpha = 0.05, so we conclude that b2 is insignficant and age of oldest family autombile can be dropped**
+
+**14.19(c)**
+```{r}
+library(lmtest)
+
+car_logit_2 = glm(Y ~ X1, data = car_purchase, family = binomial(link = "logit"))
+lrtest(car_logit_2, car_logit)
+```
+**H0: b2 = 0, Ha: b2 ! = 0**
+
+**In the likelihood ratio test, we can see the p-value is 0.1059, which is smaller than alpha, so we do not reject H0 and conclude that age of the oldest family automobile can be dropped. Since likelihood ratio test yields a smaller p-value than Wald test, we can conclude that likelihood ratio test is more sensitive than the Wald test**
+
+
+
+
