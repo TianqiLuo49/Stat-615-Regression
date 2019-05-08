@@ -1,0 +1,250 @@
+#4.7(a)
+
+**Read the data**
+```{r}
+df = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw1/maintenance")
+
+cols = c("minutes", "copiers")
+
+colnames(df) = cols
+```
+
+
+**Fit the linear regression**
+```{r}
+fit = lm( minutes ~ copiers, data = df)
+```
+
+
+**Use the predict function to find the fitted values and the standard errors for the confidence intervals for the Working-Hotelling**
+```{r}
+conf_3_wh = predict(fit, newdata = data.frame(copiers = 3), se.fit = T, interval = "confidence", level = (1 - 0.1))
+
+conf_5_wh = predict(fit, newdata = data.frame(copiers = 5), se.fit = T, interval = "confidence", level = (1 - 0.1))
+
+conf_7_wh = predict(fit, newdata = data.frame(copiers = 7), se.fit = T, interval = "confidence", level = (1 - 0.1))
+```
+
+
+
+**Use the predict function to find the fitted values and the standard errors for the confidence intervals for the Bonferroni Method**
+```{r}
+conf_3_bonferroni = predict(fit, newdata = data.frame(copiers = 3), se.fit = T, interval = "confidence", level = (1 - (0.1)/(2*3)))
+
+conf_5_bonferroni = predict(fit, newdata = data.frame(copiers = 5), se.fit = T, interval = "confidence", level = (1 - (0.1)/(2*3)))
+
+conf_7_bonferroni = predict(fit, newdata = data.frame(copiers = 7), se.fit = T, interval = "confidence", level = (1 - (0.1)/(2*3)))
+```
+
+**Work out the working-hotelling coefficient**
+```{r}
+w = sqrt(2* qf(0.9, 2, 43))
+```
+
+
+**Work out the confidence interval for working-hotelling when copiers = 3**
+```{r}
+CI_3_wh_upper = conf_3_wh$fit[1] + w * conf_3_wh$se.fit
+
+CI_3_wh_lower = conf_3_wh$fit[1] - w * conf_3_wh$se.fit
+
+CI_3_wh_upper
+
+CI_3_wh_lower
+```
+
+**So we can see that in our case, when copiers = 3, the working-hotelling confidence interval is (40.83265, 48.21853)**
+
+
+
+
+
+
+**Work out the confidence interval for working-hotelling when copiers = 5**
+```{r}
+CI_5_wh_upper = conf_5_wh$fit[1] + w * conf_5_wh$se.fit
+
+CI_5_wh_lower = conf_5_wh$fit[1] - w * conf_5_wh$se.fit
+
+
+CI_5_wh_upper
+
+CI_5_wh_lower
+```
+
+**In our case, when copiers = 5, the working-hotelling confidence interval is (71.66417, 77.528)**
+
+
+
+
+**Work out the confidence interval for working-hotelling when copiers = 7**
+```{r}
+CI_7_wh_upper = conf_7_wh$fit[1] + w * conf_7_wh$se.fit
+
+CI_7_wh_lower = conf_7_wh$fit[1] - w * conf_7_wh$se.fit
+
+
+CI_7_wh_upper
+
+CI_7_wh_lower
+```
+
+**In our case, when copiers = 7, the working-hotelling confidence interval is (101.1128, 108.2204)**
+
+
+
+**Work out the coefficient for the Bonferroni**
+```{r}
+b1 = qt(1-(0.1/(2*3)), 43)
+```
+
+
+**Work out the confidence interval when copiers = 3 for Bonferroni**
+```{r}
+CI_3_bonferroni_upper = conf_3_bonferroni$fit[1] + b1* conf_3_bonferroni$se.fit 
+
+CI_3_bonferroni_lower = conf_3_bonferroni$fit[1] - b1* conf_3_bonferroni$se.fit 
+
+CI_3_bonferroni_upper
+CI_3_bonferroni_lower
+
+```
+
+**We can see in our case, the confidence interval for Bonferroni when copiers = 3 is (40.84285, 48.20832)**
+
+
+**Work out the Bonferroni confidence interval when copiers = 5**
+```{r}
+CI_5_bonferroni_upper = conf_5_bonferroni$fit[1] + b1* conf_5_bonferroni$se.fit 
+
+CI_5_bonferroni_lower = conf_5_bonferroni$fit[1] - b1* conf_5_bonferroni$se.fit 
+
+CI_5_bonferroni_upper
+CI_5_bonferroni_lower
+
+```
+
+**We can see in our case, the confidence interval for Bonferroni when copiers = 5 is (71.67227, 77.51989)**
+
+
+**Work out the Bonferroni confidence inteval when copiers = 7**
+```{r}
+CI_7_bonferroni_upper = conf_7_bonferroni$fit[1] + b1* conf_7_bonferroni$se.fit 
+
+CI_7_bonferroni_lower = conf_7_bonferroni$fit[1] - b1* conf_7_bonferroni$se.fit 
+
+CI_7_bonferroni_upper
+CI_7_bonferroni_lower
+```
+
+**We can see in our case, the confidence interval for Bonferroni when copiers = 7 is (101.1226, 108.2106)**
+
+
+
+**We can see that the Bonferroni method has a narrower confidence interval**
+
+
+## 4.7(b)
+
+**Bonferroni would probably provide a tighter confidence interval because it is often used when contrasts are small**
+
+```{r}
+anova(fit)
+```
+
+**The MSE in our regression line is 79**
+
+**Work out the f score we use for the Scheffe's**
+```{r}
+f_score = qf(0.90, 2, 43)
+f_score
+```
+
+
+**Work out the prediction values for the Scheffe's**
+```{r}
+pred_4_scheffe = predict(fit, newdata = data.frame(copiers = 4), se.fit = T, interval = "prediction", level = 0.90)
+
+pred_7_scheffe = predict(fit, newdata = data.frame(copiers = 7), se.fit = T, interval = "prediction", level = 0.90)
+```
+
+
+**Work out the prediction interval for Scheffe's when copiers = 4**
+```{r}
+PI_4_scheffe_upper = pred_4_scheffe$fit[1] + sqrt(2* f_score)*sqrt(pred_4_scheffe$se.fit^2 + 79)
+
+PI_4_scheffe_lower = pred_4_scheffe$fit[1] - sqrt(2* f_score)*sqrt(pred_4_scheffe$se.fit^2 + 79)
+
+
+PI_4_scheffe_upper
+
+PI_4_scheffe_lower
+```
+
+**We can see in our case, the prediction interval for Scheffe's when copiers = 4 is (39.71173, 79.40994)**
+
+
+**Work out the prediction interval for Scheffe's when copiers = 7**
+```{r}
+PI_7_scheffe_upper = pred_7_scheffe$fit[1] + sqrt(2* f_score)*sqrt((pred_7_scheffe$se.fit)^2 + 79)
+
+PI_7_scheffe_lower = pred_7_scheffe$fit[1] - sqrt(2* f_score)*sqrt(((pred_7_scheffe$se.fit)^2 + 79))
+
+PI_7_scheffe_upper
+
+PI_7_scheffe_lower
+```
+
+**We can see that in our case, the prediction for Scheffe's is (84.75091, 124.5822)**
+
+
+
+**Find the predicted values for the Bonferroni in our linear regression**
+```{r}
+pred_4_bonferroni = predict(fit, newdata = data.frame(copiers = 4), se.fit = T, interval = "prediction", level = (1-(0.1)/(2*2)))
+
+pred_7_bonferroni = predict(fit, newdata = data.frame(copiers = 7), se.fit = T, interval = "prediction", level = (1-(0.1)/(2*2)))
+```
+
+**Work out the Bonferroni coefficient**
+```{r}
+b2 = qt(1 - 0.10/(2*2), 43)
+b2
+```
+
+**Work out the prediction interval for Bonferroni when copiers = 4**
+```{r}
+PI_4_bonferroni_upper = pred_4_bonferroni$fit[1] +b2*sqrt(pred_4_bonferroni$se.fit^2 + 79)
+
+PI_4_bonferroni_lower = pred_4_bonferroni$fit[1] +-2*sqrt(pred_4_bonferroni$se.fit^2 + 79)
+
+
+PI_4_bonferroni_upper
+
+PI_4_bonferroni_lower
+```
+**We can see in our case, our Bonferroni prediction interval when copiers = 4 is (44.55487, 77.71708)**
+
+
+
+**Work out the prediction intervals for Bonferroni when copiers = 7**
+```{r}
+PI_7_bonferroni_upper = pred_7_bonferroni$fit[1] +b2 * sqrt(pred_7_bonferroni$se.fit^2 + 79)
+
+PI_7_bonferroni_lower = pred_7_bonferroni$fit[1] -b2 * sqrt(pred_7_bonferroni$se.fit^2 + 79)
+
+
+PI_7_bonferroni_upper
+
+PI_7_bonferroni_lower
+```
+**We can see in our case, our Bonferroni prediction interval when copiers = 7 is (86.44945, 122.8837)**
+
+
+**Bonferroni shows tighter limits**
+
+##4.7(c)
+
+**Since Bonferroni is simpler and more efficient, we use Bonferroni's methods here**
+
+**So, when copiers = 4, prediction interval = (44.55487, 77.71708), when copiers = 7, prediction interval = (86.44945, 122.8837)**
