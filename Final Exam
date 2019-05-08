@@ -1,0 +1,291 @@
+**Tianqi Luo**
+
+**Stat 615 Final Exam**
+
+**ID	InfectionRisk	LengthOfStay	RoutineCulturingRatio	Region	AverageDailyCensus**
+
+
+**(1)**
+```{r}
+senic = read.table("/Users/naughtyboy35/Desktop/Stat 615/Final Exam/senic.txt")
+
+cols = c("ID", "InfectionRisk", "LengthOfStay", "RoutineCulturingRatio", "Region", "AverageDailyCensus")
+
+colnames(senic) = cols
+
+senic$ID = NULL
+```
+
+
+**Plot the distribution of the variables**
+```{r}
+par(mfrow = c(2,2))
+
+region_tab = table(senic$Region)
+
+hist(senic$LengthOfStay, xlab = "Length of Stay", main = "Distribution of Length of Stay")
+
+hist(senic$RoutineCulturingRatio, xlab = "Routine Culturing Ratio", main = "Distribution of Routine Culturing Ratio")
+
+barplot(region_tab, xlab = "Region", ylab = "Frequency", main = "Frequencies for Regions")
+
+hist(senic$AverageDailyCensus, xlab = "Average Daily Census", main = "Distribution of Average Daily Census")
+```
+
+
+**Plot all the variables against Infection Risk**
+```{r}
+par(mfrow = c(2,2))
+
+plot(senic$LengthOfStay, senic$InfectionRisk, xlab = "Length of Stay", ylab = "Infection Risk")
+
+plot(senic$RoutineCulturingRatio, senic$InfectionRisk, xlab = "Routine Culturing Ratio", ylab = "Infection Risk")
+
+plot(senic$Region, senic$InfectionRisk, xlab = "Region", ylab = "Infection Risk")
+
+plot(senic$AverageDailyCensus, senic$InfectionRisk, xlab = "Average Daily Census", ylab = "Infection Risk")
+```
+
+
+**(2)**
+
+**Fit a linear model**
+```{r}
+fit = lm(InfectionRisk ~ LengthOfStay + RoutineCulturingRatio + Region + AverageDailyCensus, senic)
+
+summary(fit)
+```
+
+**We can see from our model that, our regression formula is InfectionRisk = -0.023165 + 0.274188 * LengthOfStay + 0.060309 * RoutineCulturingRatio + 0.220189 * Region + 0.001358 * AverageDailyCensus**
+
+
+**(3)**
+
+**We can use NE region as a base for the dummy variable and construct a new linear regression**
+```{r}
+X1 = as.numeric(senic$Region == 1)
+
+X2 = as.numeric(senic$Region == 2)
+
+X3 = as.numeric(senic$Region == 3)
+
+X4 = as.numeric(senic$Region == 4)
+
+newsenic = data.frame(senic$InfectionRisk, senic$LengthOfStay, senic$RoutineCulturingRatio, senic$AverageDailyCensus, X1, X2, X3, X4)
+
+cols = c("InfectionRisk", "LengthOfStay", "RoutineCulturingRatio", "AverageDailyCensus", "X1", "X2", "X3", "X4")
+
+colnames(newsenic) = cols
+```
+
+**Fit new linear models**
+```{r}
+new_fit = lm(InfectionRisk ~ LengthOfStay + RoutineCulturingRatio + AverageDailyCensus + as.factor(X2) + as.factor(X3) + as.factor(X4), newsenic)
+
+summary(new_fit)
+```
+
+**Use Bonferroni method to find the confidence intervals**
+```{r}
+b2 = 0.232104
+se_b2 = 0.264578
+b3 = 0.107419 
+se_b3 = 0.270717
+b4 = 0.962847
+se_b4 = 0.345675
+```
+
+```{r}
+B = qt(1-(0.1/(2*2)), 106)
+```
+
+**Confidence interval for b2**
+```{r}
+upper_level_b2 = b2 + B * se_b2
+lower_level_b2 = b2 = B * se_b2
+
+b2_CI = c(lower_level_b2, upper_level_b2)
+
+b2_CI
+```
+
+**Confidence Interval for b3**
+```{r}
+upper_level_b3 = b3 + B * se_b3
+lower_level_b3 = b3 - B * se_b3
+
+b3_CI = c(lower_level_b3, upper_level_b3)
+
+b3_CI
+```
+
+**Confidence Interval for b4**
+```{r}
+upper_level_b4 = b4 + B * se_b4
+lower_level_b4 = b4 - B * se_b4
+
+b4_CI = c(lower_level_b4, upper_level_b4)
+
+b4_CI
+```
+
+**Since only the confidence interval for b3 includes 0, we can see there's no significant difference between NE vs S, but there is significant difference between NE vs NC and NE vs W**
+
+
+**(4)**
+**No, we can't conclude that. Our result merely suggests that between each category the results are not significantly differnet. If we include the whole variable, it might still significantly affect the infection risk, so we can't conclude that.**
+
+
+**(5)**
+
+**Fit a new model with an interaction term**
+```{r}
+fit_2 = lm(InfectionRisk ~ LengthOfStay + RoutineCulturingRatio + Region + AverageDailyCensus + I(AverageDailyCensus * RoutineCulturingRatio) + I(AverageDailyCensus * LengthOfStay),  senic)
+
+summary(fit_2)
+```
+**H0: b5 = 0, HA: b5 != 0**
+**We can see the p-value = 0.004706, smaller than alpha = 0.05, so we reject H0 and conclude that b5 is significant, so interaction between AverageDailyCensus and RoutineCulturingRatio is significant**
+
+**H0 : b6 = 0, HA: b6 !=0**
+**We can see the p-value = 0.496255, bigger than alpha = 0.05, so we do not reject H0 and conclude b5 is insignificant, so the interaction between AverageDailyCensus and RoutineCulturingRatio is insignificant**
+
+**6**
+
+**Find AIC, BIC, and PRESS for both models**
+```{r}
+selcri<-function(lmout)
+{
+ n <- length(lmout$fit)
+ rsq <- summary(lmout)$r.sq
+ adj.rsq <- summary(lmout)$adj.r.sq
+ aic <- extractAIC(lmout)[2]
+ bic <- extractAIC(lmout, k = log(n))[2]
+ press <- sum((lmout$residuals/(1 - hatvalues(lmout)))^2)
+ cbind(rsq, adj.rsq, aic, bic, press)
+}
+```
+
+```{r}
+selcri(fit)
+```
+
+```{r}
+selcri(fit_2)
+```
+**Our new model is better because it has a smaller AIC, smaller BIC, and smaller PRESS**
+
+
+**Partial F-test**
+```{r}
+anova(fit_2, fit)
+```
+**H0: The new model is insignificant. Ha: The new model is significant**
+
+**Since our p-value is smaller than alpha = 0.05, we reject H0 and conclude that new model is significant, so new old model is better**
+
+
+
+**(7)**
+```{r}
+resid = resid(fit_2)
+
+boxplot(resid~senic$Region)
+```
+
+**We can see from the boxplot that there are significant differences between region and its residuals, so they show signs of non-constant error variance**
+
+**(8)(i)**
+
+**Since there are signs of non-constant error variance between residuals of different regions, we know that the predictor region is significant in the model. Since different regions affect different numerical independent variables as well, we can create a new model with more interaction terms between regions and other variables, and use the significance test to test whether or not the interaction terms are significant**
+
+
+**(8)(ii)**
+
+**Since there are signs of non-constant error variance between the residuals of different regions, and there are no signs of interaction between region and other variables, we could just run our original linear model without adding interaction terms**
+
+**(9)**
+
+**Cook's D plot**
+```{r}
+cutoff = 4/((nrow(senic) - length(fit_2$coefficients) -2))
+
+plot(fit_2, which = 4, cook.levels = cutoff)
+```
+
+**We can see that the 8th, the 47th, and the 112nd cases are influential points**
+
+**DFFITs and cook's d**
+```{r}
+dffit = dffits(fit_2)
+
+cookd = cooks.distance(fit_2)
+```
+
+
+**Plot the Cook's distance, and highlight the cases 8, 47 and 112**
+```{r}
+plot(cookd, col = ifelse(cookd %in% c(cookd[8], cookd[47], cookd[112]),  "red", "blue"))
+```
+
+**Use DFFIT to check for influence**
+
+**Plot the dffits, and highlight cases 8, 47, and 112**
+```{r}
+plot(dffit, col = ifelse (dffit %in% c(dffit[8], dffit[47], dffit[112]),  "red", "blue"))
+```
+
+
+**We can see the dffits for cases 8, 47, 112 are significanty smaller, so they are influential points**
+
+
+**The cases 8, 47, 112 have significantly bigger dffits, dfbetas and cook's ds, so we can conclude that these 3 cases are indeed influential points**
+
+
+**Pairwise matrices**
+```{r}
+pairs(senic)
+```
+
+**We can see there's linear relationship between InfectionRisk and other numerical independent variables, and there doesn't seem to be a significant difference between the regions in terms of InfectionRisk**
+
+
+
+**Correlation Matrix**
+```{r}
+library(car)
+cor(senic)
+```
+
+**We can see that there's a positive linear regression between LengthOfStay, RoutineCulturingRatio, and AverageDailyCensus with InfectionRisk.**
+
+
+**Box-Cox transformation**
+```{r}
+library(MASS)
+boxcox(fit_2)
+```
+
+**We can see that, the 95% confidence interval of lambda includes "1", so log transforamtion or square-root transformation are not needed**
+
+
+**Multicollinearity**
+```{r}
+vif(fit_2)
+```
+
+**We can see the VIFs for some of the coefficients are too large, so we can see there's high multicollinearity between these variables**
+
+**We can use a weighted least-square to better the model**
+```{r}
+fit_3 = lm((fit_2$residuals)^2 ~ LengthOfStay + RoutineCulturingRatio + Region + AverageDailyCensus + I(AverageDailyCensus * RoutineCulturingRatio) + I(AverageDailyCensus * LengthOfStay),  senic)
+
+senic$w1 = 1/(fit_3$fitted.values)
+
+fit_4 = lm(InfectionRisk ~ LengthOfStay + RoutineCulturingRatio + Region + AverageDailyCensus + I(AverageDailyCensus * RoutineCulturingRatio) + I(AverageDailyCensus * LengthOfStay), weights = w1, senic)
+
+summary(fit_4)
+```
+
+**We can see the multiple R-squared for the revised weighted least-squared model is 0.5845, better than 0.5481 from our fit_2, so we can conclude our model is indeed better with the weighted least square**
+
