@@ -1,0 +1,143 @@
+**Stat 615 HW9**
+
+**Tianqi Luo**
+
+## Problem 1
+
+**10.17(a)**
+
+**Read in the data, rename the columns**
+```{r}
+patient_satisfaction = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw9/patient_satisfaction.txt")
+
+cols = c("Y", "X1", "X2", "X3")
+
+colnames(patient_satisfaction) = cols
+```
+
+
+**Fit the model**
+```{r}
+fit = lm(Y ~ X1 + X2 + X3, patient_satisfaction)
+```
+
+**Plot the scatterplot matrix**
+```{r}
+pairs(patient_satisfaction)
+```
+
+
+**Calculate the correlation matrix**
+```{r}
+cor(patient_satisfaction)
+```
+**We can see there's a negative linear regression between all the predictors X1, X2 and X3 with Y, and X1, X2, and X3 have positive correlations**
+
+
+**10.17(b)**
+```{r}
+library(car)
+vif(fit)
+```
+**We can see the all the VIFS are greater than 1 but less than 5, so there's moderate multicollinearity between the three predictors**
+
+
+**12.6(a)**
+```{r}
+copier_maintenance = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw9/copier_maintenance.txt")
+
+cols = c("Y", "X")
+
+colnames(copier_maintenance) = cols
+
+```
+
+**Read in the data**
+```{r}
+library(lmtest)
+fit_1 = lm(Y ~ X, copier_maintenance)
+
+dwtest(fit_1)
+```
+
+
+
+**Plot qqplot and qqline for the residuals, we can see the residuals are normally distributed, so the linear regression line is appropriate**
+```{r}
+qqnorm(resid(fit_1))
+
+qqline(resid(fit_1))
+```
+
+**H0: There is no positive autocorrelation, Ha: There is positive autocorrelation**
+
+
+**According to the Durbin-Watsons Test, P-value is greater than 0.01, so we do not reject H0 at alpha = 0.05, so there is no positive autocorrelation**
+
+```{r}
+machine_speed = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw9/machine_speed.txt")
+
+cols = c("Y", "X")
+
+colnames(machine_speed) = cols
+```
+
+
+**11.7(a)**
+```{r}
+fit_2 = lm(Y ~ X, machine_speed)
+
+plot(machine_speed$X, fit_2$residuals)
+```
+
+```{r}
+summary(fit_2)
+```
+**B0 is -5.75, B1 is 0.1875**
+
+
+**11.7(c)**
+```{r}
+plot(machine_speed$X, (fit_2$residuals)^2)
+```
+
+**The residuals are independent with the X**
+
+
+**11.7(d)**
+
+**Find the weight, plug in the regression line**
+```{r}
+fit_3 = lm((fit_2$residuals)^2 ~ X, machine_speed)
+
+machine_speed$w1 = 1/(fit_3$fitted.values)
+
+fit_4 = lm(Y ~ X, weights = w1, machine_speed)
+
+summary(fit_4)
+```
+
+**B0 is -6.23322, B1 is 0.18911, B0 is pretty different from the original model, while B1 does not seem to be too different from the B1 from the original model**
+
+
+**2.18(f)**
+
+**Do a summary for the original model**
+```{r}
+summary(fit_2)
+```
+**The standard deviations are very different, the weighted ones are smaller**
+
+**11.7(g)**
+```{r}
+fit_5 = lm((fit_4$residuals)^2 ~ X, machine_speed)
+
+machine_speed$w2 = 1/(fit_5$fitted.values)
+
+fit_6 = lm(Y ~ X, weights = w2, machine_speed)
+
+summary(fit_6)
+```
+**The B0 and B1 are basically the same with the model with w1, so there is no substantial change in terms of B0 and B1**
+
+
