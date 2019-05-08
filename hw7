@@ -1,0 +1,101 @@
+**Stat 615 HW7**
+
+**Tianqi Luo**
+
+## Problem 1
+
+**9.18(a)**
+
+**Read in the data and change the names**
+```{r}
+job_proficiency = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw7/job_proficiency.txt")
+
+cols = c("Y", "X1", "X2", "X3", "X4")
+
+colnames(job_proficiency) = cols
+```
+
+
+**Use stepwise forward selection to select the best subset model, using signifance levels 0.05 and 0.1**
+```{r}
+fit1 = lm( Y ~ ., job_proficiency)
+
+fit2 = lm(Y ~ 1, job_proficiency)
+
+library(SignifReg)
+
+model_1 = SignifReg( Y ~ X1 + X2 + X3 + X4, data = job_proficiency, alpha = 0.05, direction = "forward")
+
+model_2 = SignifReg (Y ~ X1 + X2 + X3 + X4, data = job_proficiency, alpha = 0.10, direction = "forward")
+```
+
+```{r}
+summary(model_1)
+```
+
+```{r}
+summary(model_2)
+```
+
+**According to our results with the two different significance levels, our best subset includes X1, X3, and X4, with our best fit model being Y = -124.20002 + 1.35697 * X3 + 0.29633 * X1 + 0.51742 * X4 **
+
+**9.18(b)**
+
+**Construct a formula to calculate the RSQ, ADJ.RSQ, AIC, BIC, and PRESS**
+```{r}
+selcri<-function(lmout)
+{
+ n <- length(lmout$fit)
+ rsq <- summary(lmout)$r.sq
+ adj.rsq <- summary(lmout)$adj.r.sq
+ aic <- extractAIC(lmout)[2]
+ bic <- extractAIC(lmout, k = log(n))[2]
+ press <- sum((lmout$residuals/(1 - hatvalues(lmout)))^2)
+ cbind(rsq, adj.rsq, aic, bic, press)
+}
+```
+
+
+**Use the regsubsets to choose the best model with different numbers of predictors**
+```{r}
+library(leaps)
+temp = regsubsets(Y ~ X1 + X2 + X3 + X4, data = job_proficiency)
+bestsub = summary(temp)
+bestsub
+```
+**Our best selected model is the third model, and the full model is the last model**
+
+
+**9.18(b)(i)**
+
+**Find the statistics for our selected model**
+```{r}
+Cp_selected = bestsub$cp[3]
+selected_model_stats = cbind(selcri(model_1), Cp_selected)
+
+selected_model_stats
+```
+**Our R^2 for our selected model is 0.9614, Adjusted R-squared = 0.956, AIC = 73.84732, Mallow's Cp = 3.727399, BIC = 78.72282, PRESS = 471.452**
+
+
+**9.18(b)(ii)**
+
+**Find the statistics for our original model**
+```{r}
+Cp_original = bestsub$cp[4]
+original_model_stats = cbind(selcri(fit1), Cp_original)
+
+original_model_stats
+```
+
+**For our original model, R^2 = 0.9629, Adjusted R-Squared = 0.9555, AIC = 74.95421, Mallow's Cp = 5, BIC = 81.04859, PRESS = 518.9885**
+
+
+**9.18(b)(iii)**
+
+**We can see since the original model has a bigger r-squared, but smaller adjusted r-squared, smaller aic, smaller bic, and smaller PRESS, also it's the model with the smallest Cp, so we can see our selected model is indeed the best subset of predictors**
+
+
+
+```{r}
+
