@@ -1,0 +1,151 @@
+**Stat 615 HW8**
+
+**Tianqi Luo**
+
+**Read in the data**
+```{r}
+patient_satisfaction = read.table("/Users/naughtyboy35/Desktop/Stat 615/hw8/patient_satisfaction.txt")
+
+cols = c("Y", "X1", "X2", "X3")
+
+colnames(patient_satisfaction) = cols
+
+```
+
+**Load
+```{r}
+library(car)
+fit = lm(Y ~ X1 + X2 + X3, patient_satisfaction, x = T)
+
+avPlots(fit)
+```
+**X1 has the strongest strength with the full model, then X2, then X3.**
+
+**10.11**
+
+```{r}
+r_student = rstudent(fit)
+
+plot(rstudent(fit))
+```
+
+```{r}
+outlierTest(fit, cutoff= 0.10, labels = names(r_student))
+
+qt(1-0.1/(2*46), 41)
+```
+**There are no outliers, because all the studnetized residuals are smaller than the Bonferroni critical value**
+
+
+**10.11(b)**
+```{r}
+diagonal_elements = lm.influence(fit)$hat
+
+diagonal_elements
+```
+
+```{r}
+x_outliers = diagonal_elements[which(diagonal_elements > 8/46)]
+
+x_outliers
+```
+
+
+```{r}
+diagonal_elements
+```
+
+```{r}
+X = fit$x
+XTXinv = solve(t(X) %*% X)
+
+new_mat = matrix(c(1, 30, 58, 2.0))
+
+new_mat
+
+t(new_mat)
+
+new_mat
+
+h_new = t(new_mat) %*% XTXinv %*% (new_mat)
+
+h_new
+
+XTXinv
+```
+
+
+```{r}
+plot(diagonal_elements, ylim = c(0,0.5))
+points(h_new, col = "red", pch = 18)
+```
+**Yes, there appears to be an extrapolation**
+
+
+```{r}
+patient_satisfaction
+
+h_new
+```
+
+```{r}
+dfbetas
+```
+
+```{r}
+dffit = dffits(fit)
+
+dfbetas = dfbetas(fit)
+
+cookd = cooks.distance(fit)
+```
+
+```{r}
+cookd
+```
+
+
+
+```{r}
+dffit
+```
+
+
+**Case 11**
+```{r}
+
+dffit[11]
+dfbetas[11,]
+cookd[11]
+```
+
+**Case 17**
+```{r}
+dffit[17]
+dfbetas[17,]
+cookd[17]
+```
+
+**Case 27**
+```{r}
+dffit[27]
+dfbetas[27,]
+cookd[27]
+```
+
+
+**10.11(f)**
+```{r}
+cutoff = 4/((nrow(patient_satisfaction) - length(fit$coefficients) -2))
+
+
+plot(fit, which = 4, cook.levels = cutoff)
+```
+
+**Yes, cases 17, 27, 31 are influential**
+
+```{r}
+nrow(patient_satisfaction)
+length(fit$coefficients)
+46-4-2
+```
